@@ -1,0 +1,8 @@
+# CLion / IntelliJ
+.idea/
+cmake-build-*/
+out/
+*.iml
+
+# macOS
+.DS_Store
