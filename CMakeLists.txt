@@ -9,4 +9,15 @@ add_executable(Senior_Project main.cpp
         ScalarFunction.cpp
         ScalarFunction.h
         TestQuadraticEq.cpp
-        TestQuadraticEq.h)
+        TestQuadraticEq.h
+        ODE1D.cpp
+        ODE1D.h
+        Euler1D.cpp
+        Euler1D.h
+        ExponentialDecayODE.cpp
+        ExponentialDecayODE.h
+        Integrator1D.cpp
+        Integrator1D.h
+        Solution1D.cpp
+        Solution1D.h
+)
