@@ -20,4 +20,7 @@ add_executable(Senior_Project main.cpp
         Integrator1D.h
         Solution1D.cpp
         Solution1D.h
+        Stepper1D.h
+        RK4_1D.cpp
+        RK4_1D.h
 )
