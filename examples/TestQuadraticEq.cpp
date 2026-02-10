@@ -2,7 +2,7 @@
 // Created by Dimitar Vitliyanov on 29.01.26.
 //
 
-#include "TestQuadraticEq.h"
+#include "../../examples/TestQuadraticEq.h"
 
 double TestQuadraticEq::value(double x) const {
     return x * x - 2.0;

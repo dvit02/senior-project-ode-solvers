@@ -22,9 +22,10 @@ inline Solution1D integrate(const Stepper1D& stepper,
     sol.t.push_back(t);
     sol.y.push_back(y);
 
-    while (t + 1e-15 < tEnd) {
-        y = stepper.step(ode, t, y, h);
-        t += h;
+    while (t < tEnd) {
+        const double h_step = std::min(h, tEnd - t);
+        y = stepper.step(ode, t, y, h_step);
+        t += h_step;
         sol.t.push_back(t);
         sol.y.push_back(y);
     }

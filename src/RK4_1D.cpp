@@ -2,7 +2,7 @@
 // Created by Dimitar Vitliyanov on 9.02.26.
 //
 
-#include "RK4_1D.h"
+#include "../include/RK4_1D.h"
 
 double RK4_1D::step(const ODE1D& ode, double t, double y, double h) const {
     const double k1 = ode.rhs(t, y);
