@@ -2,7 +2,7 @@
 // Created by Dimitar Vitliyanov on 29.01.26.
 //
 
-#include "../include/Newton1D.h"
+#include "Newton1D.h"
 #include <cmath>
 #include <stdexcept>
 

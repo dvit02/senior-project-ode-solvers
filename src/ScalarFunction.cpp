@@ -2,7 +2,7 @@
 // Created by Dimitar Vitliyanov on 29.01.26.
 //
 
-#include "../include/ScalarFunction.h"
+#include "ScalarFunction.h"
 #include <cmath>
 using namespace std;
 double ScalarFunction::derivative(double x) const {
