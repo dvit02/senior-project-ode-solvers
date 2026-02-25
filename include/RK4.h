@@ -7,14 +7,13 @@
 #include "Stepper.h"
 #include <vector>
 
-class RK4 :Stepper{
+class RK4 :public Stepper{
 public:
     void step(const ODE& ode,
               double t,
+              const State& y,
               double h,
-              const std::vector<double>& y,
-              std::vector<double>& y_next) const override;
-
+              State& y_next) const override;
 };
 
 

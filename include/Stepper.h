@@ -6,13 +6,12 @@
 #define SENIOR_PROJECT_STEPPER_H
 #include "ODE.h"
 
-// Interface for one-step methods on systems
 class Stepper {
 public:
     virtual ~Stepper() = default;
 
-    // Compute one step: y_next ≈ y(t+h)
-    virtual void step(const ODE& ode,
+
+    virtual void step(const ODE& ode, // Compute one step: y_next ≈ y(t+h)
                       double t,
                       const State& y,
                       double h,

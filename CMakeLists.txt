@@ -14,6 +14,8 @@ add_library(ode_solvers
         src/RK4_1D.cpp
         src/ExponentialDecayODE.cpp
         src/Euler.cpp
+        src/RK4.cpp
+        src/HarmonicOscillator.cpp
 )
 
 target_include_directories(ode_solvers
@@ -22,10 +24,10 @@ target_include_directories(ode_solvers
 )
 
 # ----------------------------
-# Example 1: your current main (convergence demo)
+# Example 1: convergence demo
 # ----------------------------
 add_executable(convergence_example
-        examples/main.cpp
+        examples/convergence_example.cpp
 )
 target_link_libraries(convergence_example PRIVATE ode_solvers)
 

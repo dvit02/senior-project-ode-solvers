@@ -1,120 +1,120 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
-#include <algorithm>   // std::max
-#include <cstddef>
-
-#include "Euler.h"
-#include "Integrator.h"
-#include "ODE.h"
-#include "Solution.h"
-#include "State.h"
-
-// Harmonic oscillator: x' = v,  v' = -x
-class HarmonicOscillator : public ODE {
-public:
-    std::size_t dim() const override { return 2; }
-
-    void rhs(double /*t*/, const State& y, State& dydt) const override {
-        dydt.resize(2);
-        const double x = y[0];
-        const double v = y[1];
-        dydt[0] = v;
-        dydt[1] = -x;
-    }
-};
-
-static double energy(const State& y) {
-    const double x = y[0];
-    const double v = y[1];
-    return 0.5 * (x*x + v*v);
-}
+#include <algorithm>
+#include "Euler1D.h"
+#include "RK4_1D.h"
+#include "ExponentialDecayODE.h"
+#include "Integrator1D.h"
+#include "Solution1D.h"
 
 int main() {
-    HarmonicOscillator ode;
-    Euler stepper;
-    Integrator integrator;
 
-    // ---- Settings ----
-    const double t0 = 0.0;
-    const double tEnd = 10.0;
-    const double h = 0.01;
+    const double k  = 1.0;
+    const double y0 = 1.0;
 
-    State y0 = {1.0, 0.0};   // x(0)=1, v(0)=0
+    const double t0   = 0.0;
+    const double tEnd = 2.0;
 
-    // Print interval (DISPLAY only)
-    const double print_every_dt = 2.0;
-    const std::size_t print_every_steps =
-            static_cast<std::size_t>(std::max(1.0, std::round(print_every_dt / h)));
+    ExponentialDecayODE ode(k);
+    Euler1D euler;
+    RK4_1D  rk4;
 
-    // Integrate
-    const Solution sol = integrator.integrate(ode, stepper, t0, y0, tEnd, h);
+    // Exact solution
+    auto y_exact = [&](double tt) {
+        return y0 * std::exp(-k * tt);
+    };
 
-    // Safety check
-    if (sol.t.empty() || sol.y.empty()) {
-        std::cout << "Solution is empty (no steps produced).\n";
-        return 0;
-    }
+    // Max absolute error over the computed grid
+    auto max_abs_error = [&](const Solution1D& sol) {
+        double m = 0.0;
+        for (std::size_t i = 0; i < sol.size(); ++i) {
+            m = std::max(m, std::abs(sol.y[i] - y_exact(sol.t[i])));
+        }
+        return m;
+    };
 
     std::cout << std::fixed << std::setprecision(6);
 
-    std::cout << "Harmonic Oscillator solved with Explicit Euler\n";
-    std::cout << "ODE system:\n";
-    std::cout << "  x'(t) = v(t)\n";
-    std::cout << "  v'(t) = -x(t)\n";
-    std::cout << "Initial conditions:\n";
-    std::cout << "  x(" << t0 << ") = " << y0[0] << ",  v(" << t0 << ") = " << y0[1] << "\n\n";
+    std::cout << "Convergence test on y' = -k y,  k=" << k
+              << ",  y(0)=" << y0 << ",  t in [" << t0 << "," << tEnd << "]\n\n";
 
-    std::cout << "Step size (time increment): h = " << h << "\n";
-    std::cout << "Meaning of columns:\n";
-    std::cout << "  n        = step index (number of Euler updates performed)\n";
-    std::cout << "  t (time) = physical time, computed as  t_n = t0 + n*h\n";
-    std::cout << "  x(t)     = position at time t\n";
-    std::cout << "  v(t)     = velocity at time t\n\n";
-
-    std::cout << "Energy definition:\n";
-    std::cout << "  E(t) = 0.5 * ( x(t)^2 + v(t)^2 )\n";
-    std::cout << "For the ideal continuous oscillator, E(t) should be constant.\n";
-    std::cout << "With Explicit Euler, small energy drift is expected.\n\n";
-
-// Table header
     std::cout << std::left
-              << std::setw(8) << "n"
-              << std::setw(10) << "h"
-              << std::setw(14) << "t (time)"
-              << std::setw(16) << "x(t) (pos)"
-              << std::setw(16) << "v(t) (vel)"
-              << std::setw(20) << "E(t)=0.5(x^2+v^2)"
+              << std::setw(12) << "h"
+              << std::setw(22) << "Euler max err"
+              << std::setw(22) << "RK4 max err"
+              << std::setw(14) << "rate(E)"
+              << std::setw(14) << "rate(RK4)"
               << "\n";
-
     std::cout << std::string(84, '-') << "\n";
 
-// Helper to print one row (i = index in stored solution arrays)
-    auto print_row = [&](std::size_t i) {
-        const std::size_t n = i;              // if you store every step, i == n
-        const double t = sol.t[i];
-        const double x = sol.y[i][0];
-        const double v = sol.y[i][1];
-        const double E = 0.5 * (x * x + v * v);
+    double prevE = 0.0, prevR = 0.0;
 
-        std::cout << std::setw(8) << n
-                  << std::setw(10) << h
-                  << std::setw(14) << t
-                  << std::setw(16) << x
-                  << std::setw(16) << v
-                  << std::setw(20) << E
+    const double h0 = 0.2;
+    const int Nlevels = 6;
+
+    for (int lev = 0; lev < Nlevels; ++lev) {
+        const double h = h0 / std::pow(2.0, lev);
+
+        const auto solE = integrate(euler, ode, t0, y0, tEnd, h);
+        const auto solR = integrate(rk4,  ode, t0, y0, tEnd, h);
+
+        const double errE = max_abs_error(solE);
+        const double errR = max_abs_error(solR);
+
+        double rateE = 0.0;
+        double rateR = 0.0;
+        if (lev > 0) {
+            rateE = std::log(prevE / errE) / std::log(2.0);
+            rateR = std::log(prevR / errR) / std::log(2.0);
+        }
+
+        // Print h as fixed; errors as scientific with more digits so they don't round to 0
+        std::cout << std::setw(12) << std::fixed << std::setprecision(6) << h
+                  << std::setw(22) << std::scientific << std::setprecision(10) << errE
+                  << std::setw(22) << std::scientific << std::setprecision(10) << errR
+                  << std::setw(14) << std::fixed << std::setprecision(6) << (lev == 0 ? 0.0 : rateE)
+                  << std::setw(14) << std::fixed << std::setprecision(6) << (lev == 0 ? 0.0 : rateR)
                   << "\n";
-    };
 
-// Print a readable subset: first, then every K steps, then last.
-// If your solution stores EVERY step, this works directly.
-// If you only stored some steps, n=i is still a valid index label for the printed rows.
-    print_row(0);
-
-    for (std::size_t i = print_every_steps; i + print_every_steps < sol.t.size(); i += print_every_steps) {
-        print_row(i);
+        prevE = errE;
+        prevR = errR;
     }
 
-    if (sol.t.size() > 1) print_row(sol.t.size() - 1);
+    const double h_detail = 0.1;
+
+    std::cout << "\nDetailed table for h = " << std::fixed << std::setprecision(6) << h_detail << "\n";
+
+    std::cout << std::left
+              << std::setw(10) << "t"
+              << std::setw(16) << "y (Euler)"
+              << std::setw(16) << "y (RK4)"
+              << std::setw(16) << "y (exact)"
+              << std::setw(18) << "|E-exact|"
+              << std::setw(18) << "|RK4-exact|"
+              << "\n";
+    std::cout << std::string(96, '-') << "\n";
+
+    const auto solE = integrate(euler, ode, t0, y0, tEnd, h_detail);
+    const auto solR = integrate(rk4,  ode, t0, y0, tEnd, h_detail);
+
+    const std::size_t n = std::min(solE.size(), solR.size());
+    for (std::size_t i = 0; i < n; ++i) {
+        const double t  = solE.t[i];
+        const double ye = y_exact(t);
+
+        const double errEi = std::abs(solE.y[i] - ye);
+        const double errRi = std::abs(solR.y[i] - ye);
+
+        // Keep state values fixed, show errors in scientific so they don't become 0.000000
+        std::cout << std::setw(10) << std::fixed << std::setprecision(6) << t
+                  << std::setw(16) << std::fixed << std::setprecision(6) << solE.y[i]
+                  << std::setw(16) << std::fixed << std::setprecision(6) << solR.y[i]
+                  << std::setw(16) << std::fixed << std::setprecision(6) << ye
+                  << std::setw(18) << std::scientific << std::setprecision(10) << errEi
+                  << std::setw(18) << std::scientific << std::setprecision(10) << errRi
+                  << "\n";
+    }
+
     return 0;
 }
