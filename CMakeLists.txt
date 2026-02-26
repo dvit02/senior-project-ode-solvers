@@ -18,7 +18,7 @@ add_library(ode_solvers
         src/HarmonicOscillator.cpp
         src/VanDerPol.cpp
         src/Integrator.cpp
-
+        src/VelocityVerlet.cpp
 )
 
 target_include_directories(ode_solvers
@@ -31,6 +31,7 @@ target_include_directories(ode_solvers
 # ----------------------------
 add_executable(convergence_example
         examples/convergence_example.cpp
+        examples/verlet_oscillator_example.cpp
 )
 target_link_libraries(convergence_example PRIVATE ode_solvers)
 
