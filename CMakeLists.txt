@@ -16,6 +16,9 @@ add_library(ode_solvers
         src/Euler.cpp
         src/RK4.cpp
         src/HarmonicOscillator.cpp
+        src/VanDerPol.cpp
+        src/Integrator.cpp
+
 )
 
 target_include_directories(ode_solvers
@@ -46,3 +49,11 @@ add_executable(test_quadratic_example
         examples/TestQuadraticEq.cpp
 )
 target_link_libraries(test_quadratic_example PRIVATE ode_solvers)
+
+# ----------------------------
+# Example 4: Van der Pol demo
+# ----------------------------
+add_executable(vanderpol_example
+        examples/vanderpol_example.cpp
+)
+target_link_libraries(vanderpol_example PRIVATE ode_solvers)
