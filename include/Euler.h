@@ -7,7 +7,16 @@
 
 #include "Stepper.h"
 
-// Forward Euler method for ODE systems
+/*Forward Euler method for ODE systems
+This declares the step function, which performs one numerical integration step.
+It overrides the virtual function from the Stepper base class.
+The function takes:
+ ode: the differential equation system being solved
+t: the current time
+y: the current state vector
+h: the step size
+y_next: the output state after one Euler step
+*/
 class Euler : public Stepper {
 public:
     void step(const ODE& ode,

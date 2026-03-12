@@ -31,7 +31,6 @@ target_include_directories(ode_solvers
 # ----------------------------
 add_executable(convergence_example
         examples/convergence_example.cpp
-        examples/verlet_oscillator_example.cpp
 )
 target_link_libraries(convergence_example PRIVATE ode_solvers)
 
@@ -58,3 +57,11 @@ add_executable(vanderpol_example
         examples/vanderpol_example.cpp
 )
 target_link_libraries(vanderpol_example PRIVATE ode_solvers)
+
+# ----------------------------
+# Example 5: Velocity Verlet oscillator demo
+# ----------------------------
+add_executable(verlet_oscillator_example
+        examples/verlet_oscillator_example.cpp
+)
+target_link_libraries(verlet_oscillator_example PRIVATE ode_solvers)

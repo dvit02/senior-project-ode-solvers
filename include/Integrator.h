@@ -8,77 +8,73 @@
 #include "Stepper.h"
 #include "RK4.h"
 
-
 struct AdaptiveResult {
-    Solution solution;
 
-    std::size_t accepted_steps = 0;
-    std::size_t rejected_steps = 0;
+    Solution solution;     // The computed numerical solution (time points + states)
+    std::size_t accepted_steps = 0;     // Number of steps accepted by the adaptive algorithm
+    std::size_t rejected_steps = 0;     // Number of rejected steps due to large error
+    double h_min_used = 0.0;     // Smallest step size used during integration
+    double h_max_used = 0.0;     // Largest step size used during integration
 
-    double h_min_used = 0.0;
-    double h_max_used = 0.0;
 };
 
+
 class Integrator {
+
 public:
     Solution integrate(const ODE& ode,
-                       const Stepper& stepper,
-                       double t0,
-                       const State& y0,
-                       double tEnd,
-                       double h) const
+                       const Stepper& stepper,   // Numerical step method (Euler, RK4, etc.)
+                       double t0,                // Initial time
+                       const State& y0,          //initial state vector
+                       double tEnd,              //final time
+                       double h) const           //fixed step size
     {
-        Solution sol;
-        sol.t.push_back(t0);
-        sol.y.push_back(y0);
+        Solution sol;        //  solution container
 
-        double t = t0;
-        State y = y0;
-        State y_next;
 
-        while (t < tEnd) {
-            double h_step = h;
-            if (t + h_step > tEnd) h_step = tEnd - t; // no <algorithm>
+        // Store initial time
+        sol.t.push_back(t0);        // Store initial time
+        sol.y.push_back(y0);        // -----  initial state
 
-            stepper.step(ode, t, y, h_step, y_next);
-            t += h_step;
-            y = y_next;
+        double t = t0;         // Current time variable
+        State y = y0;           // Current state
+        State y_next;         // Variable to store next step state
 
+
+        while (t < tEnd) {         // Loop until final time is reached
+            double h_step = h;             // Default step size
+
+
+            // Adjust step if we would overshoot tEnd
+            if (t + h_step > tEnd) h_step = tEnd - t;
+            stepper.step(ode, t, y, h_step, y_next);    // Perform one numerical step
+            t += h_step;             // Advance time
+            y = y_next;            // Update state
+
+
+            // Store new time, state
             sol.t.push_back(t);
             sol.y.push_back(y);
         }
 
+        // Return the computed solution
         return sol;
     }
-/**
-* Adaptive RK4 integrator using step-doubling error control.
-*
-* @param ode      ODE system
-* @param stepper  RK4 stepper (used internally)
-* @param t0       Initial time
-* @param y0       Initial state
-* @param tEnd     Final time
-* @param h0       Initial step size
-* @param rtol     Relative tolerance
-* @param atol     Absolute tolerance
-* @param h_min    Minimum allowed step size
-* @param h_max    Maximum allowed step size
-*
-* @return AdaptiveResult containing solution and diagnostics
-     **/
 
 
-AdaptiveResult integrateAdaptiveRK4(
-        const ODE& ode,
-        const RK4& stepper,
-        double t0,
-        const State& y0,
-        double tEnd,
-        double h0,
-        double rtol,
-        double atol,
-        double h_min,
-        double h_max
-) const;
+    // Adaptive RK4 integrator (error-controlled step size)
+    AdaptiveResult integrateAdaptiveRK4(const ODE& ode,
+                                        const RK4& stepper,  // RK4 stepper used for integration
+                                        double t0,
+                                        const State& y0,    // Initial state
+                                        double tEnd,
+                                        double h0,          // Initial step size
+                                        double rtol,        // Relative error tolerance
+                                        double atol,        // Absolute error tolerance
+                                        double h_min,       // Minimum allowed step size
+                                        double h_max        // Maximum allowed step size
+
+    ) const;
 };
+
 #endif //SENIOR_PROJECT_INTEGRATOR_H

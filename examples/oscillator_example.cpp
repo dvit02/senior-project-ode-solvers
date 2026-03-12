@@ -14,16 +14,16 @@
 
 // Energy for harmonic oscillator: E = 0.5*(v^2 + omega^2 x^2)
 static double energy(const State& y, double omega) {
-    const double x = y[0];
-    const double v = y[1];
-    return 0.5 * (v*v + (omega*omega) * (x*x));
+    const double x = y[0]; // position
+    const double v = y[1]; // velocity
+    return 0.5 * (v*v + (omega*omega) * (x*x)); // compute total mechanical energy
 }
 
 // Analytical solution for x'' + omega^2 x = 0 with IC: x(0)=x0, v(0)=v0
 static State analytic_state(double t, double omega, double x0, double v0) {
-    const double x = x0 * std::cos(omega * t) + (v0 / omega) * std::sin(omega * t);
-    const double v = -x0 * omega * std::sin(omega * t) + v0 * std::cos(omega * t);
-    return State{ x, v };
+    const double x = x0 * std::cos(omega * t) + (v0 / omega) * std::sin(omega * t); // analytic position
+    const double v = -x0 * omega * std::sin(omega * t) + v0 * std::cos(omega * t);  // analytic velocity
+    return State{ x, v }; // return analytic state vector
 }
 
 // One combined CSV: Euler + RK4 + Analytical ("true") on the same time grid
@@ -34,60 +34,60 @@ static void export_csv_combined(const char* filename,
                                 double x0,
                                 double v0)
 {
-    std::ofstream out(filename);
+    std::ofstream out(filename); // open CSV file
     out << "t,"
            "x_euler,v_euler,E_euler,"
            "x_rk4,v_rk4,E_rk4,"
-           "x_true,v_true,E_true\n";
+           "x_true,v_true,E_true\n"; // CSV header
 
-    const std::size_t N = std::min(solE.t.size(), solR.t.size());
+    const std::size_t N = std::min(solE.t.size(), solR.t.size()); // ensure both solutions use same size
 
     for (std::size_t i = 0; i < N; ++i) {
-        const double t  = solE.t[i];
+        const double t  = solE.t[i]; // current time
 
-        const double xE = solE.y[i][0];
-        const double vE = solE.y[i][1];
-        const double EE = energy(solE.y[i], omega);
+        const double xE = solE.y[i][0]; // Euler position
+        const double vE = solE.y[i][1]; // Euler velocity
+        const double EE = energy(solE.y[i], omega); // Euler energy
 
-        const double xR = solR.y[i][0];
-        const double vR = solR.y[i][1];
-        const double ER = energy(solR.y[i], omega);
+        const double xR = solR.y[i][0]; // RK4 position
+        const double vR = solR.y[i][1]; // RK4 velocity
+        const double ER = energy(solR.y[i], omega); // RK4 energy
 
-        const State yT  = analytic_state(t, omega, x0, v0);
-        const double xT = yT[0];
-        const double vT = yT[1];
-        const double ET = energy(yT, omega);
+        const State yT  = analytic_state(t, omega, x0, v0); // analytic solution at time t
+        const double xT = yT[0]; // analytic position
+        const double vT = yT[1]; // analytic velocity
+        const double ET = energy(yT, omega); // analytic energy
 
         out << t << ","
             << xE << "," << vE << "," << EE << ","
             << xR << "," << vR << "," << ER << ","
-            << xT << "," << vT << "," << ET << "\n";
+            << xT << "," << vT << "," << ET << "\n"; // write row to CSV
     }
 }
 
 int main() {
-    const double omega = 1.0;
-    HarmonicOscillator ode(omega);
+    const double omega = 1.0; // oscillator frequency
+    HarmonicOscillator ode(omega); // create harmonic oscillator ODE
 
-    Euler euler_stepper;
-    RK4   rk4_stepper;
+    Euler euler_stepper; // Euler integration method
+    RK4   rk4_stepper;   // RK4 integration method
 
-    Integrator integrator;
+    Integrator integrator; // integrator controlling time stepping
 
-    const double t0   = 0.0;
-    const double tEnd = 10.0;
-    const double h    = 0.01;
+    const double t0   = 0.0; // start time
+    const double tEnd = 10.0; // end time
+    const double h    = 0.01; // fixed step size
 
     State y0 = {1.0, 0.0}; // x(0)=1, v(0)=0
 
     // Print interval (DISPLAY only)
-    const double print_every_dt = 2.0;
+    const double print_every_dt = 2.0; // desired time interval between printed rows
     const std::size_t print_every_steps =
-            static_cast<std::size_t>(std::max<long long>(1LL, std::llround(print_every_dt / h)));
+            static_cast<std::size_t>(std::max<long long>(1LL, std::llround(print_every_dt / h))); // convert time interval to step count
 
     // Integrate BOTH methods on the SAME grid
-    const Solution solE = integrator.integrate(ode, euler_stepper, t0, y0, tEnd, h);
-    const Solution solR = integrator.integrate(ode, rk4_stepper,   t0, y0, tEnd, h);
+    const Solution solE = integrator.integrate(ode, euler_stepper, t0, y0, tEnd, h); // Euler integration
+    const Solution solR = integrator.integrate(ode, rk4_stepper,   t0, y0, tEnd, h); // RK4 integration
 
     // Safety checks
     if (solE.t.empty() || solE.y.empty()) {
@@ -100,14 +100,14 @@ int main() {
     }
 
     // Ensure same size
-    const std::size_t N = std::min(solE.t.size(), solR.t.size());
+    const std::size_t N = std::min(solE.t.size(), solR.t.size()); // number of available solution points
 
     // Export ONE combined CSV for Python plotting (Euler + RK4 + Analytical)
     export_csv_combined("oscillator_validation.csv", solE, solR, omega, y0[0], y0[1]);
     std::cout << "Saved CSV: oscillator_validation.csv\n\n";
 
     // Output header
-    std::cout << std::fixed << std::setprecision(6);
+    std::cout << std::fixed << std::setprecision(6); // set numeric formatting
     std::cout << "Harmonic Oscillator: Explicit Euler vs RK4\n";
     std::cout << "System (ODE): x'(t)=v(t), v'(t)=-(omega^2)x(t)\n";
     std::cout << "omega = " << omega << "\n";
@@ -133,19 +133,19 @@ int main() {
               << std::setw(16) << "|E_E-E_R|"
               << "\n";
 
-    std::cout << std::string(8+12+16+16+18 +2 +16+16+18 +2 +16, '-') << "\n";
+    std::cout << std::string(8+12+16+16+18 +2 +16+16+18 +2 +16, '-') << "\n"; // separator line
 
-    auto print_row = [&](std::size_t i) {
+    auto print_row = [&](std::size_t i) { // helper lambda for printing a row
         const double t = solE.t[i];
-        const std::size_t n = static_cast<std::size_t>(std::llround((t - t0) / h));
+        const std::size_t n = static_cast<std::size_t>(std::llround((t - t0) / h)); // compute step index
 
         const double xE = solE.y[i][0];
         const double vE = solE.y[i][1];
-        const double EE = energy(solE.y[i], omega);
+        const double EE = energy(solE.y[i], omega); // Euler energy
 
         const double xR = solR.y[i][0];
         const double vR = solR.y[i][1];
-        const double ER = energy(solR.y[i], omega);
+        const double ER = energy(solR.y[i], omega); // RK4 energy
 
         std::cout << std::setw(8)  << n
                   << std::setw(12) << t
@@ -157,21 +157,20 @@ int main() {
                   << std::setw(16) << vR
                   << std::setw(18) << ER
                   << "  "
-                  << std::setw(16) << std::fabs(EE - ER)
+                  << std::setw(16) << std::fabs(EE - ER) // difference in energies
                   << "\n";
     };
 
     // Print first
-    print_row(0);
+    print_row(0); // first row of output
 
     // Print every K steps (avoid printing last twice)
     for (std::size_t i = print_every_steps; i < N; i += print_every_steps) {
         if (i + print_every_steps >= N) break;
-        print_row(i);
+        print_row(i); // periodic output
     }
 
     // Print last
-    if (N > 1) print_row(N - 1);
+    if (N > 1) print_row(N - 1); // final state
 
-    return 0;
-}
+    return 0; }
