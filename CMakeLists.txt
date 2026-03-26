@@ -19,6 +19,7 @@ add_library(ode_solvers
         src/VanDerPol.cpp
         src/Integrator.cpp
         src/VelocityVerlet.cpp
+        src/DormandPrince.cpp
 )
 
 target_include_directories(ode_solvers
@@ -65,3 +66,12 @@ add_executable(verlet_oscillator_example
         examples/verlet_oscillator_example.cpp
 )
 target_link_libraries(verlet_oscillator_example PRIVATE ode_solvers)
+
+# ----------------------------
+# Example 6: Dormand-Prince RK45 vs adaptive RK4
+# ----------------------------
+add_executable(dp45_example
+        examples/dp45_example.cpp
+)
+target_link_libraries(dp45_example PRIVATE ode_solvers)
+
