@@ -4,17 +4,17 @@
 
 #ifndef SENIOR_PROJECT_EXPONENTIALDECAYODE_H
 #define SENIOR_PROJECT_EXPONENTIALDECAYODE_H
-#include "ODE1D.h"
+#include "ODE.h"
 
-class ExponentialDecayODE: public ODE1D {
-    public:
-        explicit ExponentialDecayODE(double k);
+class ExponentialDecayODE: public ODE {
+public:
+    explicit ExponentialDecayODE(double k);
 
-        double rhs(double t, double y) const override;
+    std::size_t dim() const override;
 
-    private:
-        double k_;
-
+    void rhs(double t, const State& y, State& dydt) const override;
+private:
+    double k_;
 };
 
 

@@ -2,11 +2,11 @@
 #include <iomanip>
 #include <cmath>
 #include <algorithm>
-#include "Euler1D.h"
-#include "RK4_1D.h"
+#include "Euler.h"
+#include "RK4.h"
 #include "ExponentialDecayODE.h"
-#include "Integrator1D.h"
-#include "Solution1D.h"
+#include "Integrator.h"
+#include "Solution.h"
 int main()
 {
     const double k = 1.0;     // decay rate
@@ -15,8 +15,10 @@ int main()
     const double tEnd = 2.0;  // end time
 
     ExponentialDecayODE ode(k); // create exponential decay ODE
-    Euler1D euler;              // Euler stepper
-    RK4_1D rk4;                 // RK4 stepper
+    const State init = { y0 };  // wrap scalar into 1-element state vector
+    Integrator integrator;      // fixed-step integrator
+    Euler euler;                // Euler stepper
+    RK4 rk4;                    // RK4 stepper
 
     // Exact solution
     auto y_exact = [&](double tt) {   // analytical solution function
@@ -24,11 +26,11 @@ int main()
     };
 
     // Max absolute error over the computed grid
-    auto max_abs_error = [&](const Solution1D& sol) {
+    auto max_abs_error = [&](const Solution& sol) {
         double m = 0.0; // store maximum error
-        for (std::size_t i = 0; i < sol.size(); ++i)
+        for (std::size_t i = 0; i < sol.t.size(); ++i)
         {
-            m = std::max(m, std::abs(sol.y[i] - y_exact(sol.t[i]))); // compare numerical vs exact
+            m = std::max(m, std::abs(sol.y[i][0] - y_exact(sol.t[i]))); // compare numerical vs exact
         }
         return m; // return maximum error
     };
@@ -59,8 +61,8 @@ int main()
     {
         const double h = h0 / std::pow(2.0, lev); // halve step size each iteration
 
-        const auto solE = integrate(euler, ode, t0, y0, tEnd, h); // Euler solution
-        const auto solR = integrate(rk4, ode, t0, y0, tEnd, h);   // RK4 solution
+        const auto solE = integrator.integrate(ode, euler, t0, init, tEnd, h); // Euler solution
+        const auto solR = integrator.integrate(ode, rk4,   t0, init, tEnd, h); // RK4 solution
 
         const double errE = max_abs_error(solE); // Euler max error
         const double errR = max_abs_error(solR); // RK4 max error
@@ -109,26 +111,26 @@ int main()
 
     std::cout << std::string(96, '-') << "\n"; // separator
 
-    const auto solE = integrate(euler, ode, t0, y0, tEnd, h_detail); // Euler detailed solution
-    const auto solR = integrate(rk4, ode, t0, y0, tEnd, h_detail);   // RK4 detailed solution
+    const auto solE = integrator.integrate(ode, euler, t0, init, tEnd, h_detail); // Euler detailed solution
+    const auto solR = integrator.integrate(ode, rk4,   t0, init, tEnd, h_detail); // RK4 detailed solution
 
-    const std::size_t n = std::min(solE.size(), solR.size()); // ensure same size
+    const std::size_t n = std::min(solE.t.size(), solR.t.size()); // ensure same size
 
     for (std::size_t i = 0; i < n; ++i)
     {
         const double t = solE.t[i]; // current time
         const double ye = y_exact(t); // exact solution
 
-        const double errEi = std::abs(solE.y[i] - ye); // Euler pointwise error
-        const double errRi = std::abs(solR.y[i] - ye); // RK4 pointwise error
+        const double errEi = std::abs(solE.y[i][0] - ye); // Euler pointwise error
+        const double errRi = std::abs(solR.y[i][0] - ye); // RK4 pointwise error
 
         // Keep state values fixed, show errors in scientific so they don't become 0.000000
         std::cout << std::setw(10)
                   << std::fixed << std::setprecision(6) << t
                   << std::setw(16)
-                  << std::fixed << std::setprecision(6) << solE.y[i]
+                  << std::fixed << std::setprecision(6) << solE.y[i][0]
                   << std::setw(16)
-                  << std::fixed << std::setprecision(6) << solR.y[i]
+                  << std::fixed << std::setprecision(6) << solR.y[i][0]
                   << std::setw(16)
                   << std::fixed << std::setprecision(6) << ye
                   << std::setw(18)

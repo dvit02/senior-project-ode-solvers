@@ -8,10 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Library: the framework
 # ----------------------------
 add_library(ode_solvers
-        src/Newton1D.cpp
-        src/ScalarFunction.cpp
-        src/Euler1D.cpp
-        src/RK4_1D.cpp
         src/ExponentialDecayODE.cpp
         src/Euler.cpp
         src/RK4.cpp
@@ -43,13 +39,6 @@ add_executable(oscillator_example
 )
 target_link_libraries(oscillator_example PRIVATE ode_solvers)
 
-# ----------------------------
-# Example 3: Newton quadratic test
-# ----------------------------
-add_executable(test_quadratic_example
-        examples/TestQuadraticEq.cpp
-)
-target_link_libraries(test_quadratic_example PRIVATE ode_solvers)
 
 # ----------------------------
 # Example 4: Van der Pol demo
@@ -74,4 +63,32 @@ add_executable(dp45_example
         examples/dp45_example.cpp
 )
 target_link_libraries(dp45_example PRIVATE ode_solvers)
+
+# ----------------------------
+# Unit tests
+# ----------------------------
+enable_testing()
+
+add_executable(fixed_steppers_unit_test
+        tests/test_fixed_steppers.cpp
+)
+target_link_libraries(fixed_steppers_unit_test PRIVATE ode_solvers)
+
+add_executable(dp45_unit_test
+        tests/test_dormand_prince.cpp
+)
+target_link_libraries(dp45_unit_test PRIVATE ode_solvers)
+
+add_executable(velocity_verlet_unit_test
+        tests/test_velocity_verlet.cpp
+)
+target_link_libraries(velocity_verlet_unit_test PRIVATE ode_solvers)
+
+add_test(NAME fixed_steppers_unit_test COMMAND fixed_steppers_unit_test)
+add_test(NAME dp45_unit_test COMMAND dp45_unit_test)
+add_test(NAME velocity_verlet_unit_test COMMAND velocity_verlet_unit_test)
+
+
+
+
 
