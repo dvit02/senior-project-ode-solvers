@@ -4,7 +4,6 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-
 #include "Integrator.h"
 #include "RK4.h"
 #include "VanDerPol.h"

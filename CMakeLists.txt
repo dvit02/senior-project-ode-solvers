@@ -64,6 +64,11 @@ add_executable(dp45_example
 )
 target_link_libraries(dp45_example PRIVATE ode_solvers)
 
+
+add_executable(benchmark_example examples/benchmark_example.cpp)
+target_link_libraries(benchmark_example ode_solvers)
+
+
 # ----------------------------
 # Unit tests
 # ----------------------------
@@ -83,6 +88,7 @@ add_executable(velocity_verlet_unit_test
         tests/test_velocity_verlet.cpp
 )
 target_link_libraries(velocity_verlet_unit_test PRIVATE ode_solvers)
+
 
 add_test(NAME fixed_steppers_unit_test COMMAND fixed_steppers_unit_test)
 add_test(NAME dp45_unit_test COMMAND dp45_unit_test)

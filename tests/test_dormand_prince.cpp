@@ -11,9 +11,9 @@
 #include "Integrator.h"
 #include "RK4.h"
 
-namespace {
+namespace { //  other .cpp files cannot see or accidentally call these functions; modern equivelent of static
 
-    double exact_decay(double t, double y0, double k)
+    double exact_decay(double t, double y0, double k) //  computes the exact solution
     {
         return y0 * std::exp(-k * t);
     }
@@ -23,16 +23,17 @@ namespace {
         const double t = sol.t.back();
         const double exact = exact_decay(t, y0, k);
         return std::fabs(sol.y.back()[0] - exact);
-    }
+    } // takes numerical solution and exact solution => computes the error
 
     void require(bool condition, const std::string& message)
     {
         if (!condition)
             throw std::runtime_error(message);
-    }
+    }// if program crashes it throws a readeble messege
 
-    void test_dp45_preserves_core_invariants()
+    void test_dp45_preserves_core_invariants() // unit test begins
     {
+        // parameters
         const double k = 1.5;
         const double t0 = 0.0;
         const double t_end = 4.0;
@@ -41,37 +42,48 @@ namespace {
         const double atol = 1e-9;
         const double h_min = 1e-5;
         const double h_max = 0.5;
-        const State y0 = {1.0};
+        const State y0 = {1.0}; // y(t) = e^(-1.5t). is the excat soution for this initial condition
 
         ExponentialDecayODE ode(k);
         DormandPrince solver;
 
         const DP45Result result =
                 solver.integrate(ode, y0, t0, t_end, h0, rtol, atol, h_min, h_max);
+        // This constructs the ODE and the solver, runs the full integration, and stores everything
 
         require(!result.solution.t.empty(), "DP45 returned an empty time grid.");
+
+        // Every time point must have a corresponding state, and every state must have a corresponding time.
         require(result.solution.t.size() == result.solution.y.size(),
                 "Time and state arrays must have the same length.");
+
         require(result.solution.t.front() == t0,
                 "First stored time must equal the initial time.");
+
         require(std::fabs(result.solution.t.back() - t_end) < 1e-12,
                 "Last stored time must land exactly on t_end.");
+        // because we first sotre the started stpe
         require(result.accepted_steps + 1 == result.solution.t.size(),
                 "Accepted step count must match the number of stored solution points.");
+
         require(result.rhs_calls == 6 * (result.accepted_steps + result.rejected_steps),
                 "Dormand-Prince RHS accounting is inconsistent with 6 calls per trial step.");
+
         require(result.accepted_steps > 0,
                 "Adaptive integration should accept at least one step.");
+
         require(result.h_min_used >= h_min,
                 "Reported minimum used step size is below the configured lower bound.");
+
         require(result.h_max_used <= h_max,
                 "Reported maximum used step size is above the configured upper bound.");
+
         require(result.h_max_used > result.h_min_used,
                 "Adaptive solver did not vary the step size on a nontrivial problem.");
 
-        for (std::size_t i = 1; i < result.solution.t.size(); ++i) {
+        for (std::size_t i = 1; i < result.solution.t.size(); ++i) { // compares each point against the one before it
             require(result.solution.t[i] > result.solution.t[i - 1],
-                    "Accepted time points must be strictly increasing.");
+                    "Accepted time points must be strictly increasing."); // t[1] > t[0]
             require(result.solution.y[i][0] > 0.0,
                     "Exponential decay solution should remain positive for positive initial data.");
         }
@@ -136,13 +148,17 @@ namespace {
 
         require(dp_error < 1e-5,
                 "Dormand-Prince final value is not accurate enough on exponential decay.");
+        // DP45's final answer must be within 1e-5 of the true value e^(-1.0 * 3.0).
+
         require(rk4_error < 1e-5,
                 "Adaptive RK4 final value is not accurate enough on exponential decay.");
+        //Adaptive final answer must be within 1e-5 of the true value e^(-1.0 * 3.0).
+
         require(std::fabs(dp_result.solution.y.back()[0] - rk4_result.solution.y.back()[0]) < 1e-5,
                 "Dormand-Prince and adaptive RK4 should agree closely on a smooth scalar test problem.");
     }
 
-} // namespace
+}
 
 int main()
 {
