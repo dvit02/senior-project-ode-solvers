@@ -16,6 +16,7 @@ add_library(ode_solvers
         src/Integrator.cpp
         src/VelocityVerlet.cpp
         src/DormandPrince.cpp
+        src/DoublePendulum.cpp
 )
 
 target_include_directories(ode_solvers
@@ -68,6 +69,19 @@ target_link_libraries(dp45_example PRIVATE ode_solvers)
 add_executable(benchmark_example examples/benchmark_example.cpp)
 target_link_libraries(benchmark_example ode_solvers)
 
+add_executable(double_pendulum_example
+        examples/double_pendulum_example.cpp
+)
+target_link_libraries(double_pendulum_example PRIVATE ode_solvers)
+
+# ----------------------------
+# Example 8: Double pendulum tolerance sweep for accuracy ranking
+# ----------------------------
+add_executable(double_pendulum_sweep
+        examples/double_pendulum_sweep.cpp
+)
+target_link_libraries(double_pendulum_sweep PRIVATE ode_solvers)
+
 
 # ----------------------------
 # Unit tests
@@ -89,10 +103,18 @@ add_executable(velocity_verlet_unit_test
 )
 target_link_libraries(velocity_verlet_unit_test PRIVATE ode_solvers)
 
+add_executable(test_double_pendulum tests/test_double_pendulum.cpp
+        src/DoublePendulum.cpp
+        src/Integrator.cpp
+        src/RK4.cpp)
+
+target_include_directories(test_double_pendulum PRIVATE include)
+
 
 add_test(NAME fixed_steppers_unit_test COMMAND fixed_steppers_unit_test)
 add_test(NAME dp45_unit_test COMMAND dp45_unit_test)
 add_test(NAME velocity_verlet_unit_test COMMAND velocity_verlet_unit_test)
+add_test(NAME test_double_pendulum COMMAND test_double_pendulum)
 
 
 
